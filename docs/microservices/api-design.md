@@ -75,7 +75,7 @@ Here are some specific considerations to keep in mind.
 
 Patterns such as entity, aggregate, and value object are designed to place certain constraints on the objects in your domain model. For example, value objects are immutable. In many discussions of DDD, the patterns are modeled using OO language concepts like constructors or property getters and setters. 
 
-For example, here is a TypeScript implementation of a value object. The properties are declared to be read-only, so the only way to modify a Location is to create a new one. The properties are validated when the object is created.
+For example, *value objects* are supposed to be immutable. In an OO language, you would enforce this by assigning the values in the constructor and making the properties read only:
 
 ```ts
 export class Location {
@@ -97,34 +97,37 @@ export class Location {
 
 Coding practices like this are particularly important in a more monolithic application. In a large code base, many subsystems might use the `Location` object, so it's important for the object to enforce correct behavior. 
 
-Another example is the Repository, which ensures that other parts of the code cannot make arbitrary writes to the data store:
+Another example is the Repository pattern, which ensures that other parts of the application cannot make arbitrary writes to the data store:
 
 ![](./images/repository.svg)
 
-But in a microservices architecture, services don't share a code base and don't share data stores. Instead, they communicate through APIs. Consider the case where the Delivery Scheduler service requests information about a drone from the Drone Management service. The Drone Management service will have an internal model of a drone, which is represented in code. But the Delivery Scheduler doesn't see that. Instead, it receives a wire representation of the entity &mdash; for example, JSON in an HTTP response body.
+In a microservices architecture, however, services don't share a code base and don't share data stores. Instead, they communicate through APIs. Consider the case where the Scheduler service requests information about a drone from the Drone Management service. The Drone service has its internal model of a drone, expressed through code. But the Delivery Scheduler doesn't see that. Instead, it gets back a *representation* of the drone entity &mdash; perhaps a JSON object in an HTTP response.
 
 ![](./images/ddd-rest.svg)
 
-As a result, code has a smaller surface area. If the Drone Management service defines a Location class, the scope of that class is limited to the service, making it easier to validate the correct usage. If another service needs to update the drone location, it has to go through the Drone Management service API.
+The Scheduler service can't modify the Drone service's internal models, or write to the Drone service's data store. That means the code that makes up the Drone service has a smaller exposed surface area, compared with code in a traditional monolith. If the Drone service defines a Location class, the scope of that class is limited &mdash; no other service will ever directly consume the Location class. 
 
-In this guidance, we focus less on OO coding principles, and put more emphasis on API design. But it turns out that RESTful APIs can model many of the tactical DDD concepts.
+For these reasons, this guidance doesn't focus much on coding practices as they related to the tactical DDD patterns. But it turns out that you can also model many of the DDD patterns through REST APIs. 
 
-- RESTful APIs model *resources*, which map naturally to aggregates. Aggregates are consistency boundaries. Operations on aggregates should never leave an aggregate in an inconsistent state.  Instead of creating APIs that allow a client to manipulate the internal state of an aggregate, favor coarse-grained APIs that expose aggregates as resources.
+- Aggregates map naturally to *resources* in REST. For example, the Delivery aggregate would be exposed as a resource by the Delivery API.
 
-- Aggregates are addressable by ID. Aggregates correspond to resources, and the URL is the stable identifier.
+- Aggregates are consistency boundaries. Operations on aggregates should never leave an aggregate in an inconsistent state. Therefore, you should avoid creating APIs that allow a client to manipulate the internal state of an aggregate. Instead, favor coarse-grained APIs that expose aggregates as resources.
 
-- Child entities can be reached at a unique URL. If you following [HATEOAS](https://en.wikipedia.org/wiki/HATEOAS), this can be conveyed through links in the representation of the parent entity.
+- Entities have unique identies. In REST, resources have unique identifiers in the form of URLs. Create resource URLs that correspond to an entity's domain identity. The mapping from URL to domain identity may be opaque to client.
 
-- Value objects are updated by replacing the entire value through a PUT or PATCH request.
+- Child entities of an aggregate can be reached by navigating from the root entity. If you follow [HATEOAS](https://en.wikipedia.org/wiki/HATEOAS) principles, child entities can be reached via links in the representation of the parent entity. 
 
-- A collection resource can act like a repository.
+- Because value objects are immutable, updates are performed by replacing the entire value object. In REST, implement updates through PUT or PATCH requests. 
+
+- A repository lets clients query, add, or remove objects in a collection, abstracting the details of the underlying data store. In REST, a collection can be a distinct resource, with methods for querying the collection or adding new entities to the collection.
 
 | DDD concept | REST equivalent | Example | 
 |-------------|-----------------|---------|
-| Aggregate ID | URL | `/deliveries/{id}` |
-| Child entities | URL and links | `/deliveries/{id}/packages/{packageId}` |
-| Update value objects | PUT or PATCH | `PUT /deliveries/{id}/dropoff` |
-| Repository | Collection | `/deliveries?status=pending` |
+| Aggregate | Resource | `{ "1":1234, "status":"pending"... }` | 
+| Identity | URL | `http://delivery-service/deliveries/1` |
+| Child entities | Links | `{ "href": "/deliveries/1/confirmation" }` |
+| Update value objects | PUT or PATCH | `PUT http://delivery-service/deliveries/1/dropoff` |
+| Repository | Collection | `http://delivery-service/deliveries?status=pending` |
 
 
 > [!div class="nextstepaction"]
