@@ -73,9 +73,7 @@ Here are some specific considerations to keep in mind.
 
 ## Mapping REST to DDD patterns
 
-Patterns such as entity, aggregate, and value object are designed to place certain constraints on the objects in your domain model. For example, value objects are immutable. In many discussions of DDD, the patterns are modeled using OO language concepts like constructors or property getters and setters. 
-
-For example, *value objects* are supposed to be immutable. In an OO language, you would enforce this by assigning the values in the constructor and making the properties read only:
+Patterns such as entity, aggregate, and value object are designed to place certain constraints on the objects in your domain model. In many discussions of DDD, the patterns are modeled using object-oriented (OO) language concepts like constructors or property getters and setters. For example, *value objects* are supposed to be immutable. In an OO programming language, you would enforce this by assigning the values in the constructor and making the properties read-only:
 
 ```ts
 export class Location {
@@ -95,19 +93,21 @@ export class Location {
 }
 ```
 
-Coding practices like this are particularly important in a more monolithic application. In a large code base, many subsystems might use the `Location` object, so it's important for the object to enforce correct behavior. 
+These sorts of coding practices are particularly important when building a traditional monolithic application. With a large code base, many subsystems might use the `Location` object, so it's important for the object to enforce correct behavior. 
 
 Another example is the Repository pattern, which ensures that other parts of the application cannot make arbitrary writes to the data store:
 
 ![](./images/repository.svg)
 
-In a microservices architecture, however, services don't share a code base and don't share data stores. Instead, they communicate through APIs. Consider the case where the Scheduler service requests information about a drone from the Drone Management service. The Drone service has its internal model of a drone, expressed through code. But the Delivery Scheduler doesn't see that. Instead, it gets back a *representation* of the drone entity &mdash; perhaps a JSON object in an HTTP response.
+In a microservices architecture, however, services don't share the same code base and don't share data stores. Instead, they communicate through APIs. Consider the case where the Scheduler service requests information about a drone from the Drone Management service. The Drone service has its internal model of a drone, expressed through code. But the Delivery Scheduler doesn't see that. Instead, it gets back a *representation* of the drone entity &mdash; perhaps a JSON object in an HTTP response.
 
 ![](./images/ddd-rest.svg)
 
-The Scheduler service can't modify the Drone service's internal models, or write to the Drone service's data store. That means the code that makes up the Drone service has a smaller exposed surface area, compared with code in a traditional monolith. If the Drone service defines a Location class, the scope of that class is limited &mdash; no other service will ever directly consume the Location class. 
+The Scheduler service can't modify the Drone service's internal models, or write to the Drone service's data store. That means the code that implements the Drone service has a smaller exposed surface area, compared with code in a traditional monolith. If the Drone service defines a Location class, the scope of that class is limited &mdash; no other service will directly consume the class. 
 
-For these reasons, this guidance doesn't focus much on coding practices as they related to the tactical DDD patterns. But it turns out that you can also model many of the DDD patterns through REST APIs. 
+For these reasons, this guidance doesn't focus much on coding practices as they relate to the tactical DDD patterns. But it turns out that you can also model many of the DDD patterns through REST APIs. 
+
+For example:
 
 - Aggregates map naturally to *resources* in REST. For example, the Delivery aggregate would be exposed as a resource by the Delivery API.
 
@@ -120,6 +120,8 @@ For these reasons, this guidance doesn't focus much on coding practices as they 
 - Because value objects are immutable, updates are performed by replacing the entire value object. In REST, implement updates through PUT or PATCH requests. 
 
 - A repository lets clients query, add, or remove objects in a collection, abstracting the details of the underlying data store. In REST, a collection can be a distinct resource, with methods for querying the collection or adding new entities to the collection.
+
+When you design your APIs, think about how they express the domain model, not just the data inside the model, but also the business operations and the constraints on the data.
 
 | DDD concept | REST equivalent | Example | 
 |-------------|-----------------|---------|
@@ -134,15 +136,15 @@ For these reasons, this guidance doesn't focus much on coding practices as they 
 
 An API is a contract between a service and clients or consumers of that service. If an API changes, there is a risk of breaking clients that depend on the API, whether those are external clients or other microservices. Therefore, it's a good idea to minimize the number of API changes that you make. Often, changes in the underlying implementation don't require any changes to the API. Realistically, however, at some point you will want to add new features or new capabilities that require changing an existing API.
 
-Whenever possible, make API changes backward compatible. For example, don't remove a field from a model. That could break clients that expect the field to be there. Adding a field does not break compatibility, because clients should ignore any fields they don't understand in a response. However, the server must handle the case where an older client omits the new field in a request. 
+Whenever possible, make API changes backward compatible. For example, avoid removing a field from a model, because that can break clients that expect the field to be there. Adding a field does not break compatibility, because clients should ignore any fields they don't understand in a response. However, the service must handle the case where an older client omits the new field in a request. 
 
-Support versioning in your API contract. If you introduce a breaking API change, introduce a new API version. Continue to support the previous version, and let clients select which version to call. There are a couple of ways to do this. One way is simply to expose both versions in the same service. Another option is to run two versions of the service side-by-side, and route requests to one or the other version, based on HTTP routing rules. 
+Support versioning in your API contract. If you introduce a breaking API change, introduce a new API version. Continue to support the previous version, and let clients select which version to call. There are a couple of ways to do this. One is simply to expose both versions in the same service. Another option is to run two versions of the service side-by-side, and route requests to one or the other version, based on HTTP routing rules. 
 
 ![](./images/api-version.png)
 
-There's a cost to supporting multiple versions, in terms of developer time, testing, and operational overhead. Therefore, it's good to deprecate the previous version as quickly as possible. For internal APIs, the team that owns the API can work with other teams that consume the API, to help them migrate over to the new version. This is when having a cross-team governance process is useful. For external (public) APIs, it can be harder to deprecate an API version, especially if the API is consumed by third parties or by native client applications. 
+There's a cost to supporting multiple versions, in terms of developer time, testing, and operational overhead. Therefore, it's good to deprecate old versions as quickly as possible. For internal APIs, the team that owns the API can work with other teams to help them migrate to the new version. This is when having a cross-team governance process is useful. For external (public) APIs, it can be harder to deprecate an API version, especially if the API is consumed by third parties or by native client applications. 
 
-When a service implementation changes, it's useful to tag the change with a version. The version provides important information when troubleshooting errors. It can be very helpful for root cause analysis to know exactly which version of an API was called. Consider using [semantic versioning](https://semver.org/) for service versions. Semantic versioning uses a *MAJOR.MINOR.PATCH* format. However, clients should only select an API by the major version number, or possibly the minor version if there are significant (but non-breaking) changes between minor versions. In other words, it's reasonable for clients to select between version 1 and version 2 of an API, but not to select version 2.1.3. If you allow that level of granularity, you risk having to support a proliferation of versions. 
+When a service implementation changes, it's useful to tag the change with a version. The version provides important information when troubleshooting errors. It can be very helpful for root cause analysis to know exactly which version of the service was called. Consider using [semantic versioning](https://semver.org/) for service versions. Semantic versioning uses a *MAJOR.MINOR.PATCH* format. However, clients should only select an API by the major version number, or possibly the minor version if there are significant (but non-breaking) changes between minor versions. In other words, it's reasonable for clients to select between version 1 and version 2 of an API, but not to select version 2.1.3. If you allow that level of granularity, you risk having to support a proliferation of versions. 
 
 For further discussion of API versioning, see [Versioning a RESTful web API](../best-practices/api-design.md#versioning-a-restful-web-api).
 
