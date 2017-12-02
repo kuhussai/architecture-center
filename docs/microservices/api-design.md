@@ -97,11 +97,11 @@ These sorts of coding practices are particularly important when building a tradi
 
 Another example is the Repository pattern, which ensures that other parts of the application cannot make arbitrary writes to the data store:
 
-![](./images/repository.svg)
+![](./images/repository.png)
 
-In a microservices architecture, however, services don't share the same code base and don't share data stores. Instead, they communicate through APIs. Consider the case where the Scheduler service requests information about a drone from the Drone Management service. The Drone service has its internal model of a drone, expressed through code. But the Delivery Scheduler doesn't see that. Instead, it gets back a *representation* of the drone entity &mdash; perhaps a JSON object in an HTTP response.
+In a microservices architecture, however, services don't share the same code base and don't share data stores. Instead, they communicate through APIs. Consider the case where the Scheduler service requests information about a drone from the Drone service. The Drone service has its internal model of a drone, expressed through code. But the Scheduler doesn't see that. Instead, it gets back a *representation* of the drone entity &mdash; perhaps a JSON object in an HTTP response.
 
-![](./images/ddd-rest.svg)
+![](./images/ddd-rest.png)
 
 The Scheduler service can't modify the Drone service's internal models, or write to the Drone service's data store. That means the code that implements the Drone service has a smaller exposed surface area, compared with code in a traditional monolith. If the Drone service defines a Location class, the scope of that class is limited &mdash; no other service will directly consume the class. 
 
