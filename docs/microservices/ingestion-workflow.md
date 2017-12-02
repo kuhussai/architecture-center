@@ -141,7 +141,7 @@ It's important to understand the difference between PUT and POST semantics when 
 
 - For a PUT method, the URI identifies the entity. If there already exists an entity with that URI, the server replaces the existing entity with the version in the request. If no entity exists with that URI, the server creates one. For example, suppose the client sends a PUT request to `api/deliveries/39660`. Assuming there is no delivery with that URI, the server creates a new one. Now if the client sends the same request again, the server will replace the existing entity.
 
-Here is code from the Delivery service for a PUT method. 
+Here is the Delivery service's implementation of the PUT method. 
 
 ```csharp
 [HttpPut("{id}")]
@@ -178,7 +178,7 @@ public async Task<IActionResult> Put([FromBody]Delivery delivery, string id)
 }
 ```
 
-It's expected that most requests will create a new entity, so the method optimistically calls `CreateAsync` on the repository object, and then handles any duplicate-resource exceptions by updating the resource. 
+It's expected that most requests will create a new entity, so the method optimistically calls `CreateAsync` on the repository object, and then handles any duplicate-resource exceptions by updating the resource instead. 
 
 > [!div class="nextstepaction"]
 > [API gateways](./gateway.md)

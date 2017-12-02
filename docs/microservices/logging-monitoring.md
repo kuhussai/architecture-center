@@ -122,7 +122,7 @@ Another option is to send logs to Operations Management Suite (OMS) Log Analytic
 
 ## Example: Logging with correlation IDs
 
-To illustrate some of the points discussed in this chapter, here is an extended example of how the Package service implements logging. The Package service was written in TypeScript and uses the [Koa](http://koajs.com/) web framework for Node.js. There are several Node.js logging libaries to choose from. We picked the [Winston](https://github.com/winstonjs/winston) library, which is a popular library that also met our performance requirements. 
+To illustrate some of the points discussed in this chapter, here is an extended example of how the Package service implements logging. The Package service was written in TypeScript and uses the [Koa](http://koajs.com/) web framework for Node.js. There are several Node.js logging libaries to choose from. We picked [Winston](https://github.com/winstonjs/winston), a popular logging library that met our performance requirements when we tested it. 
 
 To encapsulate the implementation details, we defined an abstract  `ILogger` interface:
 

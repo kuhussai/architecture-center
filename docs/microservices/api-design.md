@@ -95,7 +95,7 @@ export class Location {
 
 These sorts of coding practices are particularly important when building a traditional monolithic application. With a large code base, many subsystems might use the `Location` object, so it's important for the object to enforce correct behavior. 
 
-Another example is the Repository pattern, which ensures that other parts of the application cannot make arbitrary writes to the data store:
+Another example is the Repository pattern, which ensures that other parts of the application do not make direct reads or writes to the data store:
 
 ![](./images/repository.png)
 

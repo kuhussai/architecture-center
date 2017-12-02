@@ -83,7 +83,7 @@ Sometimes people talk about containers and microservices as if they were the sam
 
 - **Portability**. A container image is a standalone package that runs without needing to install libraries or other dependencies. That makes them easy to deploy. Containers can be started and stopped quickly, so you can spin up new instances to handle more load, or recover from node failures. 
 
-- **Density**. Containers are lightweight compared with running a virtual machine, because they share OS resources. That makes it possible to pack multiple containers onto a single node, which useful when your application consists of many small services.
+- **Density**. Containers are lightweight compared with running a virtual machine, because they share OS resources. That makes it possible to pack multiple containers onto a single node, which is especially useful when the application consists of many small services.
 
 - **Resource isolation**. You can limit the amount of memory and CPU that is available to a container, which can help to ensure that a runaway process doesn't exhaust the entire host resources. See [Bulkhead pattern](../patterns/bulkhead.md) for more information.
 
@@ -97,19 +97,19 @@ With a serverless architecture, you don't manage the VMs or the virtual network 
 
 Here are some factors to consider in choosing between an orchestrator approach and a serverless approach.
 
-**Manageability** A serverless application is easy to manage, because the platform manages all the of compute resources for you. While an orchestrator abstracts some aspects of managing and configuring a cluster, it does not completely hide the underlying VMs. You'll need to think about load balancing, CPU and memory usage, networking, and other issues. 
+**Manageability** A serverless application is easy to manage, because the platform manages all the of compute resources for you. While an orchestrator abstracts some aspects of managing and configuring a cluster, it does not completely hide the underlying VMs. With an orchestrator, you need'll to think about issues such as load balancing, CPU and memory usage, and networking.
 
-**Flexibility and control**. An orchestrator gives you a great deal of control over configurating and managing your services and the cluster. The tradeoff is additional complexity. With a serverless architecture, you give up some degree of control because these details are abstracted. 
+**Flexibility and control**. An orchestrator gives you a great deal of control over configuring and managing your services and the cluster. The tradeoff is additional complexity. With a serverless architecture, you give up some degree of control because these details are abstracted. 
 
 **Portability**. All of the orchestrators listed here (Kubernetes, DC/OS, Docker Swarm, and Service Fabric) can run on-premises or in multiple public clouds. 
 
-**Integration**. It can be challenging to build a complex application using a serverless architecture. One option in Azure is to use [Azure Logic Apps](/azure/logic-apps/) as an orchestrator for Azure Functions. For an example of this approach, see [Create a function that integrates with Azure Logic Apps](/azure/azure-functions/functions-twitter-email.)
+**Application integration**. It can be challenging to build a complex application using a serverless architecture. One option in Azure is to use [Azure Logic Apps](/azure/logic-apps/) to coordinate a set of Azure Functions. For an example of this approach, see [Create a function that integrates with Azure Logic Apps](/azure/azure-functions/functions-twitter-email.)
 
 **Cost**. With an orchestrator, you pay for the VMs that are running in the cluster. With a serverless application, you pay only for the actual compute resources consumed. In both cases, you need to factor in the cost of any additional services, such as storage, databases, and messaging services.
 
-**Scalability**. Azure Functions scales automatically to meet demand, based on the number of incoming events. With an orchestrator, you can scale out by increasing the number of services instances running in the cluster. You can also scale by adding additional VMs to the cluster.
+**Scalability**. Azure Functions scales automatically to meet demand, based on the number of incoming events. With an orchestrator, you can scale out by increasing the number of service instances running in the cluster. You can also scale by adding additional VMs to the cluster.
 
-Although our reference implementation uses Kubernetes, we did use Azure Functions for one of our services: The Delivery History service. Azure Functions was a good fit for this particular service, because the service is an event-driven workload. By using an Event Hubs trigger to invoke the function, the amount of code needed was minimal. Also, the Delivery History service is not part of the main workflow, so running it outside of the Kubernetes cluster doesn't affect the end-to-end latency of user-initiated operations. 
+Although our reference implementation uses Kubernetes, we did use Azure Functions for one of our services, namely the Delivery History service. Azure Functions was a good fit for this particular service, because the service is an event-driven workload. By using an Event Hubs trigger to invoke the function, the amount of code needed was minimal. Also, the Delivery History service is not part of the main workflow, so running it outside of the Kubernetes cluster doesn't affect the end-to-end latency of user-initiated operations. 
 
 
 
