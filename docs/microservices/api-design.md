@@ -130,5 +130,21 @@ For these reasons, this guidance doesn't focus much on coding practices as they 
 | Repository | Collection | `http://delivery-service/deliveries?status=pending` |
 
 
+## API versioning
+
+An API is a contract between a service and clients or consumers of that service. If an API changes, there is a risk of breaking clients that depend on the API, whether those are external clients or other microservices. Therefore, it's a good idea to minimize the number of API changes that you make. Often, changes in the underlying implementation don't require any changes to the API. Realistically, however, at some point you will want to add new features or new capabilities that require changing an existing API.
+
+Whenever possible, make API changes backward compatible. For example, don't remove a field from a model. That could break clients that expect the field to be there. Adding a field does not break compatibility, because clients should ignore any fields they don't understand in a response. However, the server must handle the case where an older client omits the new field in a request. 
+
+Support versioning in your API contract. If you introduce a breaking API change, introduce a new API version. Continue to support the previous version, and let clients select which version to call. There are a couple of ways to do this. One way is simply to expose both versions in the same service. Another option is to run two versions of the service side-by-side, and route requests to one or the other version, based on HTTP routing rules. 
+
+![](./images/api-version.png)
+
+There's a cost to supporting multiple versions, in terms of developer time, testing, and operational overhead. Therefore, it's good to deprecate the previous version as quickly as possible. For internal APIs, the team that owns the API can work with other teams that consume the API, to help them migrate over to the new version. This is when having a cross-team governance process is useful. For external (public) APIs, it can be harder to deprecate an API version, especially if the API is consumed by third parties or by native client applications. 
+
+When a service implementation changes, it's useful to tag the change with a version. The version provides important information when troubleshooting errors. It can be very helpful for root cause analysis to know exactly which version of an API was called. Consider using [semantic versioning](https://semver.org/) for service versions. Semantic versioning uses a *MAJOR.MINOR.PATCH* format. However, clients should only select an API by the major version number, or possibly the minor version if there are significant (but non-breaking) changes between minor versions. In other words, it's reasonable for clients to select between version 1 and version 2 of an API, but not to select version 2.1.3. If you allow that level of granularity, you risk having to support a proliferation of versions. 
+
+For further discussion of API versioning, see [Versioning a RESTful web API](../best-practices/api-design,md#versioning-a-restful-web-api).
+
 > [!div class="nextstepaction"]
 > [Ingestion and workflow](./ingestion-workflow.md)
